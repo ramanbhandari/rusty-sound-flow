@@ -1,6 +1,7 @@
 use anyhow::Result;
 use env_logger;
 use log::info;
+use clap::Parser;
 
 mod audio;
 mod processing;
@@ -10,30 +11,41 @@ use audio::AudioInput;
 use processing::Processor;
 use rendering::Renderer;
 
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// path to the audio file (WAV format), if not provided, uses live microphone input
+    #[arg(short, long)]
+    file: Option<String>,
+}
+
 fn main() -> Result<()> {
-    // Initialize the logger
+    // initialize the logger
     env_logger::init();
 
-    // Create the event loop and window for rendering
+    // parse command-line arguments
+    let args = Args::parse();
+
+    // create the event loop and window for rendering
     let event_loop = winit::event_loop::EventLoop::new();
     let window = winit::window::Window::new(&event_loop)?;
 
-    // Initialize the audio input (live or from file)
-    let audio_input = AudioInput::new()?;
+    // initialize the audio input (live or from file)
+    let mut audio_input = AudioInput::new(args.file)?;
 
-    // Initialize the processor
+    // initialize the processor
     let mut processor = Processor::new();
 
-    // Initialize the renderer
+    // initialize the renderer
     let mut renderer = futures::executor::block_on(Renderer::new(&window))?;
 
     info!("Starting the audio visualization tool...");
 
-    // Start the event loop
+    // start the event loop
     event_loop.run(move |event, _, control_flow| {
         *control_flow = winit::event_loop::ControlFlow::Poll;
 
-        // Handle events here
+        // handle events here
         match event {
             winit::event::Event::WindowEvent { event, .. } => match event {
                 winit::event::WindowEvent::CloseRequested => {
@@ -42,13 +54,13 @@ fn main() -> Result<()> {
                 _ => {}
             },
             winit::event::Event::MainEventsCleared => {
-                // Get audio samples
+                // get audio samples
                 let samples = audio_input.get_samples();
 
-                // Process samples (e.g., compute FFT)
+                // process samples (e.g., compute FFT)
                 let frequency_data = processor.process(&samples);
 
-                // Render the visualization
+                // render visualization
                 if let Err(e) = renderer.render(&samples, &frequency_data) {
                     eprintln!("Render error: {}", e);
                 }
@@ -56,4 +68,5 @@ fn main() -> Result<()> {
             _ => {}
         }
     });
+
 }

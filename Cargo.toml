@@ -13,3 +13,5 @@ log = "0.4.17"
 env_logger = "0.9.0"
 futures = "0.3.25"
 bytemuck = { version = "1.9.1", features = ["derive"] }
+clap = { version = "4.0.32", features = ["derive"] }  # Command-line argument parsing
+hound = "3.4.0"

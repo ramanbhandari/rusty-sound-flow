@@ -29,7 +29,7 @@ cargo run
 ### Run with Audio File
 You can also visualize with an audio file, currently supporting only `.wav`
 ```bash
-cargo run -- path/to/audio/file.wav
+cargo run -- --file path/to/audio/file.wav
 ```
 
 
